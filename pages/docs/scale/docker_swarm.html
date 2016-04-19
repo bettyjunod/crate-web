@@ -1,11 +1,12 @@
 title: Docker Swarm
 author: Chris Ward
+description: Combining Crate with Docker Swarm allows for scalable clusters spread accross data centers.
 
 This documentation was tested with Docker Machine version `0.7.0` and Docker `1.11.0`. Please let us know if you experience any problems.
 
 Swarm is Docker's native clustering tool, turning a pool of Docker instances into one single abstract host. This makes it perfect for a scalable database like Crate. Generally Swarm uses instances created by Docker machine, but can also be [setup manually](https://docs.docker.com/swarm/install-manual/).
 
-To get a Crate cluster running on Swarm on a local machine you can follow [the Swarm getting started guide](https://docs.docker.com/swarm/install-w-machine/) and replace `docker run hello-world` with Crate commands:
+To get a Crate cluster running on Swarm on the same machine you can follow [the Swarm getting started guide](https://docs.docker.com/swarm/install-w-machine/) and replace `docker run hello-world` with Crate commands:
 
 ```bash
 docker run -P -d crate
