@@ -22,8 +22,8 @@ building and packaging Crate, we only use the latest versions with no
 known vulnerabilities.
 
 Many users like and download our Docker containers, since Crate plays
-very well with containers in general. Since container virtualization
-is a new technology, many security experts raised the question how to
+very well with containers in general. Since containerization
+is a new technology, many security experts raised the question regarding how to
 ensure that the code running inside containers is untampered and
 doesn't include backdoors or other malware. This is an excellent
 question to ask, and we made quite an effort to address it.
@@ -34,13 +34,13 @@ Docker Hub, a curated repository of useful software components, that
 get actively reviewed by a specialized team at Docker, Inc. To be able
 to provide and maintain Official Images, we have to adhere to certain
 standards, answer support questions, and update our image whenever
-this is useful and necessary.
+this is useful and necessary. Our official repo is also digitally signed when you `docker pull crate' with Docker Content Trust enabled you are guaranteed to our latest, greatest, and untampered image.
 
 Nevertheless, we are delighted that Docker takes an extra effort to
 detect even more issues in containers: As part of the [Project
 Nautilus](XXXXXXXXXXXXX) Docker scans each layer of our Official Image
-and notifies us on any findings. We take part to this project with our
-official Image "crate". To do so, we switched to Alpine Linux as a
+and notifies us on any findings. This has been available to Official Repo partners like us since DockerCon EU in November. As a publisher on Docker Hub, it is valuable to have this kind of insight provided by the company that hossts our image for end users. 
+We take part to this project with our official Image "crate". To do so, we switched to Alpine Linux as a
 base image, since it is the foundation for throughly scanned images
 with Nautilus.
 
