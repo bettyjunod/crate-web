@@ -1,0 +1,119 @@
+title: XXXXX XXXX: How Alpine Linux and Docker Nautilus protect Crate images
+link: https://crate.io/a/big-bite-ingesting-performance
+author: Nils Magnus
+description: How the Docker Nautilus project improves security of our Crate images
+created: 2016/04/27 14:37:43
+post_name: XXXXXXXXXXXXXXX
+status: publish
+post_type: post
+tags: docker, security
+category: news, developernews
+
+![Create Virtual Network]({% media '/media/XXXX/XXXXXXXXXX-cc-by-sa-2.0-XXXXXXXXX-XXXXXX.jpg' %})
+
+*[CC by-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/), XXXXXX XXXXXXXX*
+
+Crate is a database, the place where you store your most valuable
+asset of your business. For that reason it is very important not to
+have vulnerabilities. We value security thus very highly. Since Crate
+uses a couple of open source libraries, our engineers closely monitor
+any security advisories that get disclosed for these artifacts. While
+building and packaging Crate, we only use the latest versions with no
+known vulnerabilities.
+
+Many users like and download our Docker containers, since Crate plays
+very well with containers in general. Since container virtualization
+is a new technology, many security experts raised the question how to
+ensure that the code running inside containers is untampered and
+doesn't include backdoors or other malware. This is an excellent
+question to ask, and we made quite an effort to address it.
+
+We have already an [Official
+Image](https://github.com/docker-library/official-images) in the
+Docker Hub, a curated repository of useful software components, that
+get actively reviewed by a specialized team at Docker, Inc. To be able
+to provide and maintain Official Images, we have to adhere to certain
+standards, answer support questions, and update our image whenever
+this is useful and necessary.
+
+Nevertheless, we are delighted that Docker takes an extra effort to
+detect even more issues in containers: As part of the [Project
+Nautilus](XXXXXXXXXXXXX) Docker scans each layer of our Official Image
+and notifies us on any findings. We take part to this project with our
+official Image "crate". To do so, we switched to Alpine Linux as a
+base image, since it is the foundation for throughly scanned images
+with Nautilus.
+
+We had to apply only a few changes to our publicly maintained
+[Dockerfile on GitHub](). We XXXXXXX, did YYYYYYYY and adjusted
+ZZZZZZZZ. That was pretty easy because as Crate just requires a Java
+1.8 environment and few extra libraries, most of them available in the
+APK package manager of Alpine Linux.
+
+One exception was the [Sigar library]
+(https://support.hyperic.com/display/SIGAR/Home) which we use to
+provide platform independent statistics on system load, pick up disk
+utilization or network throughput from the operating system. We feed
+that information to our [sys-tables]() for cluster infratstruture
+management. The upstream Sigar code expects to be compiled against the
+glibc, but Alpine Linux comes with a libc-musl, which XXXXXX has a
+lean footprint and is easier to audit. <-- is that correct?
+XXXXXXX. Thanks to [Natanael Copa](https://github.com/ncopa), an
+Alpine Linux maintainer, we've been able to [patch the Sigar upstream
+code](https://github.com/ncopa/sigar/tree/sigar-1.6.4-musl), so it
+also compiles with libc-musl.
+
+Currently we implemented a build environment in a separate container,
+that clones the patched Sigar code, builds it and uploads it to our
+CDN server:
+
+```bash
+XXXXX snippets or whole Dockerfile XXXXXX
+
+[...]
+RUN echo 'http://nl.alpinelinux.org/alpine/latest-stable/community' >> /etc/apk/repositories
+RUN set -ex \
+    && apk update && apk add -u --no-cache --virtual .build-deps \
+        git gcc libc-dev make cmake libtirpc-dev pax-utils curl openjdk8 gnupg perl \
+    && mkdir -p /usr/src && cd /usr/src \
+    && curl -fSL https://www.apache.org/dist/ant/KEYS -o KEYS \
+    && curl -fSL -O https://www.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz.asc \
+    && curl -fSL -O http://apache.uib.no//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz \
+    && gpg --import KEYS \
+    && gpg --verify apache-ant-${ANT_VERSION}-bin.tar.gz.asc \
+    && tar -zxf apache-ant-${ANT_VERSION}-bin.tar.gz \
+    && git clone --branch sigar-1.6.4-musl https://github.com/ncopa/sigar.git \
+    && cd sigar/bindings/java \
+    && ${ANT} \
+    && mkdir -p /usr/local/bin \
+    && find build -name '*.so*' | xargs install -t /usr/local/lib \
+    && runDeps="$(scanelf --needed --nobanner --recursive /usr/local \
+			  | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+			  | sort -u \
+			  | xargs -r apk info --installed \
+		  	  | sort -u)" \
+    && apk add --virtual .libsigar-rundeps $runDeps \
+    && apk del .build-deps git gcc libc-dev make cmake libtirpc-dev pax-utils curl openjdk8 gnupg perl \
+    && rm -rf /var/cache/apk/*
+[...]
+XXXXX this needs tweaking depending on what Integration team actually does/uses XXXXXX
+```
+
+XXXXXX Why don't we take the last step and build an APK
+out of these artifacts? XXXXXXXXX
+
+Switching to Alpine as an base image had several advantages for us: It
+has a smaller memory footprint, we benefit from enhanced security
+thanks to the Nautilus project and even reduced the size of the image
+by XXXX MB. Pretty amazing for a giant shrimp!
+
+
+
+XXXXX to Integration team: This is not part of the blog post at the moment: XXXXXXXXX
+
+    Is the tool something crate.io would use internally?
+    Is security a priority for you and your organization
+    In your eyes how will this image scanning solution help the adoption of containers and enable greater security?
+    Why do you think this tool is important?
+    What is the value of binary scan of layers and output data that is produced, to the enterprise?
+
